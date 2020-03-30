@@ -23,9 +23,10 @@ export default class Tables extends React.Component {
   };
 
   getRowsData = function() {
-    var items = this.props.data;
-    var keys = this.getKeys();
+    let items = this.props.data;
+    let keys = this.getKeys();
     return items.map((row, index) => {
+      console.log(row);
       return (
         <tr key={index}>
           <RenderRow key={index} data={row} keys={keys} />
