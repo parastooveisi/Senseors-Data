@@ -4,62 +4,70 @@ import { Button, Container } from "semantic-ui-react";
 import readings from "./Data/readings";
 import sensors from "./Data/sensors";
 import Table from "./Components/Table";
-import { convertToF, timeZone, timeZoneSensor } from "./Utility/utils";
-const celcuis_data = readings;
-let fahrenheit_data = readings;
+import { convertToF, changeTimeZone, roundNumbers } from "./Utility/utils";
 
 class App extends Component {
   constructor(props) {
-    timeZone(readings);
-    timeZoneSensor(sensors);
-
-    readings.forEach(element => {
-      element.value = (Math.round(element.value * 100) / 100).toFixed(2);
-    });
-
     super(props);
+    this.celcius_data = readings;
+    this.farenheitData = readings;
+    this.sensorsData = sensors;
+
+    this.farenheitData = this.preProcessData();
+
     this.state = {
-      sensors_data: sensors,
-      celcuis_data: readings,
-      celcuis: true
+      celcius: true
     };
   }
 
-  preProcessing = () => {
+  preProcessData = () => {
+    readings.forEach(element => {
+      element.value = roundNumbers(element.value);
+    });
+
+    readings.forEach(element => {
+      element.time = changeTimeZone(element.time);
+    });
+
+    sensors.forEach(element => {
+      element.createdAt = changeTimeZone(element.createdAt);
+    });
+
     const tempSensors = sensors.filter(sensor => {
-      if (sensor.units == "Celsius") {
-        console.log(sensor.id);
+      if (sensor.units === "Celsius") {
         return sensor.id;
       }
     });
 
     const tempSensorIds = tempSensors.map(sensor => sensor.id);
 
-    fahrenheit_data = readings.map(reading => {
+    this.farenheitData = readings.map(reading => {
       return tempSensorIds.includes(reading.sensorId)
         ? { ...reading, value: convertToF(reading.value).toString() }
         : reading;
     });
 
-    console.log(fahrenheit_data);
-    return fahrenheit_data;
-  };
-  onClick = () => {
-    this.setState({ celcuis: !this.state.celcuis });
+    return this.farenheitData;
   };
 
-  componentDidMount() {
-    fahrenheit_data = this.preProcessing();
-  }
+  onClick = () => {
+    this.setState(prevState => ({
+      celcius: !prevState.celcius
+    }));
+  };
 
   render() {
     return (
-      <Container style={{ marginTop: "10px" }}>
-        <Table data={this.state.sensors_data} />
-        <Table data={this.state.celcuis ? celcuis_data : fahrenheit_data} />
+      <Container style={{ marginTop: "20px" }}>
+        <Table data={this.sensorsData} />
         <Button floated="right" primary basic onClick={this.onClick}>
-          Change Unit
+          C / F
         </Button>
+        <div style={{ marginTop: "20px" }}>
+          <Table
+            data={this.state.celcius ? this.celcius_data : this.farenheitData}
+          />
+        </div>
       </Container>
     );
   }
